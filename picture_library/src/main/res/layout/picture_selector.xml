@@ -35,11 +35,12 @@
             android:textColor="?attr/picture.preview.textColor"
             android:textSize="14sp" />
         <com.luck.picture.lib.widget.SelectedPreviewLayout
-            android:id="@+id/spLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_toLeftOf="@+id/id_ll_ok"
-            />
+        android:id="@+id/spLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+            android:layout_marginLeft="6dp"
+        android:layout_toLeftOf="@+id/id_ll_ok"
+        />
 
 
         <LinearLayout
@@ -50,6 +51,7 @@
             android:layout_centerVertical="true"
             android:enabled="false"
             android:layout_marginRight="8dp"
+            android:layout_marginLeft="3dp"
             android:background="?attr/picture.preview.drawable"
             android:gravity="center"
             android:orientation="vertical">

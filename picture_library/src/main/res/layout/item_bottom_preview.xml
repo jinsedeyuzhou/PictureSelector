@@ -9,6 +9,7 @@
         android:id="@+id/ivPreviewPhoto"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:layout_marginBottom="6dp"
         android:layout_centerInParent="true"
         />
 
@@ -17,9 +18,9 @@
         android:id="@+id/ivPreviewDelete"
         android:layout_width="13dp"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="3dp"
         android:layout_marginRight="-3dp"
         android:layout_height="13dp"
+
         android:src="@drawable/ic_preview_delete"
         />
 

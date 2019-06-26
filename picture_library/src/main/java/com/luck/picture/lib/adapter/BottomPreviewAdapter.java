@@ -62,7 +62,7 @@ public class BottomPreviewAdapter extends RecyclerView.Adapter<BottomPreviewAdap
                         RoundedBitmapDrawable circularBitmapDrawable =
                                 RoundedBitmapDrawableFactory.
                                         create(mContext.getResources(), resource);
-                        circularBitmapDrawable.setCornerRadius(8);
+                        circularBitmapDrawable.setCornerRadius(4);
                         holder.ivPreviewPhoto.setImageDrawable(circularBitmapDrawable);
                     }
                 });

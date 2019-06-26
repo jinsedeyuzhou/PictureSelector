@@ -3,9 +3,12 @@ package com.luck.picture.lib.adapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -19,6 +22,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.luck.picture.lib.R;
 import com.luck.picture.lib.anim.OptAnimationLoader;
 import com.luck.picture.lib.config.PictureConfig;
@@ -198,7 +202,18 @@ public class PictureImageGridAdapter extends RecyclerView.Adapter<RecyclerView.V
                         .asBitmap()
                         .load(path)
                         .apply(options)
-                        .into(contentHolder.iv_picture);
+//                        .into(contentHolder.iv_picture);
+                .into(new BitmapImageViewTarget(contentHolder.iv_picture) {
+                    @Override
+                    protected void setResource(Bitmap resource) {
+                        RoundedBitmapDrawable circularBitmapDrawable =
+                                RoundedBitmapDrawableFactory.
+                                        create(context.getResources(), resource);
+                        circularBitmapDrawable.setCornerRadius(4);
+                        contentHolder.iv_picture.setImageDrawable(circularBitmapDrawable);
+                    }
+                });
+
             }
             if (enablePreview || enablePreviewVideo || enablePreviewAudio) {
                 contentHolder.ll_check.setOnClickListener(new View.OnClickListener() {

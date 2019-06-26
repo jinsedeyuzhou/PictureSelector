@@ -261,7 +261,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         folderWindow.setOnItemClickListener(this);
         picture_recycler.setHasFixedSize(true);
         picture_recycler.addItemDecoration(new GridSpacingItemDecoration(config.imageSpanCount,
-                ScreenUtils.dip2px(this, 8), true));
+                ScreenUtils.dip2px(this, 6), true));
         picture_recycler.setLayoutManager(new GridLayoutManager(this, config.imageSpanCount));
         // 解决调用 notifyItemChanged 闪烁问题,取消默认动画
         ((SimpleItemAnimator) picture_recycler.getItemAnimator())
