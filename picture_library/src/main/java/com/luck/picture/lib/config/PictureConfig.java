@@ -15,6 +15,7 @@ public final class PictureConfig {
     public final static String EXTRA_LOCAL_MEDIAS = "localMedias";
     public final static String EXTRA_PREVIEW_SELECT_LIST = "previewSelectList";
     public final static String EXTRA_SELECT_LIST = "selectList";
+    public final static String DIRECTORY_LIST="directory_list";
     public final static String EXTRA_POSITION = "position";
     public final static String EXTRA_MEDIA = "media";
     public final static String DIRECTORY_PATH = "directory_path";
@@ -24,9 +25,11 @@ public final class PictureConfig {
     public final static String EXTRA_CONFIG = "PictureSelectorConfig";
     public final static String IMAGE = "image";
     public final static String VIDEO = "video";
+    public final static String PICTURE_TITLE="picture_title";
 
 
     public final static int UPDATE_FLAG = 2774;// 预览界面更新选中数据 标识
+    public final static int UPDATE_FLAG_PREVIEW = 2775;// 底部预览界面更新选中数据 标识
     public final static int CLOSE_PREVIEW_FLAG = 2770;// 关闭预览界面 标识
     public final static int PREVIEW_DATA_FLAG = 2771;// 预览界面图片 标识
     public final static int TYPE_ALL = 0;

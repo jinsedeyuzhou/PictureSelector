@@ -88,11 +88,12 @@ public class PictureAlbumDirectoryAdapter extends RecyclerView.Adapter<PictureAl
                     .into(new BitmapImageViewTarget(holder.first_image) {
                         @Override
                         protected void setResource(Bitmap resource) {
-                            RoundedBitmapDrawable circularBitmapDrawable =
-                                    RoundedBitmapDrawableFactory.
-                                            create(mContext.getResources(), resource);
-                            circularBitmapDrawable.setCornerRadius(8);
-                            holder.first_image.setImageDrawable(circularBitmapDrawable);
+//                            RoundedBitmapDrawable circularBitmapDrawable =
+//                                    RoundedBitmapDrawableFactory.
+//                                            create(mContext.getResources(), resource);
+//                            circularBitmapDrawable.setCornerRadius(8);
+//                            holder.first_image.setImageDrawable(circularBitmapDrawable);
+                            holder.first_image.setImageBitmap(resource);
                         }
                     });
         }

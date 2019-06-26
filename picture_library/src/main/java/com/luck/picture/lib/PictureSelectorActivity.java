@@ -14,6 +14,7 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SimpleItemAnimator;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -48,6 +49,7 @@ import com.luck.picture.lib.tools.StringUtils;
 import com.luck.picture.lib.tools.ToastManage;
 import com.luck.picture.lib.widget.FolderPopWindow;
 import com.luck.picture.lib.widget.PhotoPopupWindow;
+import com.luck.picture.lib.widget.SelectedPreviewLayout;
 import com.yalantis.ucrop.UCrop;
 import com.yalantis.ucrop.UCropMulti;
 import com.yalantis.ucrop.model.CutInfo;
@@ -80,6 +82,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     private RecyclerView picture_recycler;
     private PictureImageGridAdapter adapter;
     private List<LocalMedia> images = new ArrayList<>();
+    private List<LocalMedia> selectedImages = new ArrayList<>();
     private List<LocalMediaFolder> foldersList = new ArrayList<>();
     private FolderPopWindow folderWindow;
     private Animation animation = null;
@@ -106,6 +109,8 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             }
         }
     };
+    private String pictureTitle;
+    private SelectedPreviewLayout spLayout;
 
     /**
      * EventBus 3.0 回调
@@ -115,6 +120,13 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void eventBus(EventEntity obj) {
         switch (obj.what) {
+            case  PictureConfig.UPDATE_FLAG_PREVIEW:
+                // 预览时勾选图片更新回调
+                List<LocalMedia> localMediaList = obj.medias;
+                anim = localMediaList.size() > 0 ? true : false;
+                adapter.bindSelectImages(localMediaList);
+                adapter.notifyDataSetChanged();
+                break;
             case PictureConfig.UPDATE_FLAG:
                 // 预览时勾选图片更新回调
                 List<LocalMedia> selectImages = obj.medias;
@@ -189,7 +201,17 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
      * init views
      */
     private void initView(Bundle savedInstanceState) {
-
+        images = (List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.DIRECTORY_LIST);
+        selectedImages=(List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.EXTRA_SELECT_LIST);
+        if (images==null)
+        {
+            images=new ArrayList<>();
+        }
+        if (selectedImages==null)
+        {
+            selectedImages=new ArrayList<>();
+        }
+        pictureTitle = getIntent().getStringExtra(PictureConfig.PICTURE_TITLE);
         rl_picture_title = (RelativeLayout) findViewById(R.id.rl_picture_title);
         picture_left_back = (ImageView) findViewById(R.id.picture_left_back);
         picture_title = (TextView) findViewById(R.id.picture_title);
@@ -199,6 +221,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         picture_tv_img_num = (TextView) findViewById(R.id.picture_tv_img_num);
         picture_recycler = (RecyclerView) findViewById(R.id.picture_recycler);
         id_ll_ok = (LinearLayout) findViewById(R.id.id_ll_ok);
+        spLayout = findViewById(R.id.spLayout);
         tv_empty = (TextView) findViewById(R.id.tv_empty);
         isNumComplete(numComplete);
         if (config.mimeType == PictureMimeType.ofAll()) {
@@ -212,7 +235,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                     + ScreenUtils.getStatusBarHeight(mContext);
         } else {
             picture_id_preview.setVisibility(config.mimeType == PictureConfig.TYPE_VIDEO
-                    ? View.GONE : View.VISIBLE);
+                    ? View.GONE : View.GONE);
         }
         picture_left_back.setOnClickListener(this);
         picture_right.setOnClickListener(this);
@@ -221,13 +244,20 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         String title = config.mimeType == PictureMimeType.ofAudio() ?
                 getString(R.string.picture_all_audio)
                 : getString(R.string.picture_camera_roll);
-        picture_title.setText(title);
+        if (pictureTitle != null && !TextUtils.isEmpty(pictureTitle)) {
+            picture_title.setText(pictureTitle);
+        } else {
+            picture_title.setText(title);
+        }
+        adapter = new PictureImageGridAdapter(mContext, config);
+        adapter.setOnPhotoSelectChangedListener(PictureSelectorActivity.this);
+        adapter.bindSelectImages(selectionMedias);
         folderWindow = new FolderPopWindow(this, config.mimeType);
         folderWindow.setPictureTitleView(picture_title);
         folderWindow.setOnItemClickListener(this);
         picture_recycler.setHasFixedSize(true);
         picture_recycler.addItemDecoration(new GridSpacingItemDecoration(config.imageSpanCount,
-                ScreenUtils.dip2px(this, 2), false));
+                ScreenUtils.dip2px(this, 8), true));
         picture_recycler.setLayoutManager(new GridLayoutManager(this, config.imageSpanCount));
         // 解决调用 notifyItemChanged 闪烁问题,取消默认动画
         ((SimpleItemAnimator) picture_recycler.getItemAnimator())
@@ -242,8 +272,17 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                     @Override
                     public void onNext(Boolean aBoolean) {
                         if (aBoolean) {
-                            mHandler.sendEmptyMessage(SHOW_DIALOG);
-                            readLocalMedia();
+                            if (images.size()==0) {
+                                mHandler.sendEmptyMessage(SHOW_DIALOG);
+                                readLocalMedia();
+                            }else
+                            {
+                                adapter.setShowCamera(true);
+                                adapter.bindImagesData(images);
+                                adapter.bindSelectImages(selectedImages);
+                                tv_empty.setVisibility(images.size() > 0
+                                        ? View.INVISIBLE : View.VISIBLE);
+                            }
                         } else {
                             ToastManage.s(mContext, getString(R.string.picture_jurisdiction));
                         }
@@ -265,14 +304,13 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             // 防止拍照内存不足时activity被回收，导致拍照后的图片未选中
             selectionMedias = PictureSelector.obtainSelectorList(savedInstanceState);
         }
-        adapter = new PictureImageGridAdapter(mContext, config);
-        adapter.setOnPhotoSelectChangedListener(PictureSelectorActivity.this);
-        adapter.bindSelectImages(selectionMedias);
         picture_recycler.setAdapter(adapter);
         String titleText = picture_title.getText().toString().trim();
         if (config.isCamera) {
             config.isCamera = StringUtils.isCamera(titleText);
         }
+
+
     }
 
     @Override
@@ -288,9 +326,11 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
      * none number style
      */
     private void isNumComplete(boolean numComplete) {
-        picture_tv_ok.setText(numComplete ? getString(R.string.picture_done_front_num,
-                0, config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum)
-                : getString(R.string.picture_please_select));
+//        picture_tv_ok.setText(numComplete ? getString(R.string.picture_done_front_num,
+//                0, config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum)
+//                : getString(R.string.picture_please_select));
+        picture_tv_ok.setText(R.string.picture_please_select);
+        picture_tv_img_num.setText("0/"+config.maxSelectNum);
         if (!numComplete) {
             animation = AnimationUtils.loadAnimation(this, R.anim.modal_in);
         }
@@ -452,12 +492,15 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        if (id == R.id.picture_left_back || id == R.id.picture_right) {
+        if (id == R.id.picture_right) {
             if (folderWindow.isShowing()) {
                 folderWindow.dismiss();
             } else {
-                closeActivity();
+              closeActivity();
             }
+        }
+        if (id == R.id.picture_left_back) {
+           goPictureDirectory();
         }
         if (id == R.id.picture_title) {
             if (folderWindow.isShowing()) {
@@ -521,6 +564,14 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                 onResult(images);
             }
         }
+    }
+
+    private void goPictureDirectory() {
+        List<LocalMedia> selectedImages = adapter.getSelectedImages();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(PictureConfig.EXTRA_SELECT_LIST, (Serializable) selectedImages);
+        startActivity(PictureDirectoryActivity.class, bundle);
+        finish();
     }
 
     /**
@@ -842,7 +893,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         } else {
             boolean isVideo = PictureMimeType.isVideo(pictureType);
             boolean eqVideo = config.mimeType == PictureConfig.TYPE_VIDEO;
-            picture_id_preview.setVisibility(isVideo || eqVideo ? View.GONE : View.VISIBLE);
+            picture_id_preview.setVisibility(isVideo || eqVideo ? View.GONE : View.GONE);
         }
         boolean enable = selectImages.size() != 0;
         if (enable) {
@@ -851,15 +902,19 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             picture_id_preview.setSelected(true);
             picture_tv_ok.setSelected(true);
             if (numComplete) {
-                picture_tv_ok.setText(getString
-                        (R.string.picture_done_front_num, selectImages.size(),
-                                config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+//                picture_tv_ok.setText(getString
+//                        (R.string.picture_done_front_num, selectImages.size(),
+//                                config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+                picture_tv_img_num.setVisibility(View.VISIBLE);
+                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                picture_tv_ok.setText(getString(R.string.picture_completed));
+
             } else {
                 if (!anim) {
                     picture_tv_img_num.startAnimation(animation);
                 }
                 picture_tv_img_num.setVisibility(View.VISIBLE);
-                picture_tv_img_num.setText(String.valueOf(selectImages.size()));
+                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
                 picture_tv_ok.setText(getString(R.string.picture_completed));
                 anim = false;
             }
@@ -869,13 +924,19 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             picture_id_preview.setSelected(false);
             picture_tv_ok.setSelected(false);
             if (numComplete) {
-                picture_tv_ok.setText(getString(R.string.picture_done_front_num, 0,
-                        config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+//                picture_tv_ok.setText(getString(R.string.picture_done_front_num, 0,
+//                        config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                picture_tv_img_num.setVisibility(View.VISIBLE);
+                picture_tv_ok.setText(getString(R.string.picture_please_select));
             } else {
-                picture_tv_img_num.setVisibility(View.INVISIBLE);
+                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                picture_tv_img_num.setVisibility(View.VISIBLE);
                 picture_tv_ok.setText(getString(R.string.picture_please_select));
             }
         }
+        spLayout.bindPreviewData(selectImages,selectImages.size()-1);
+
     }
 
 

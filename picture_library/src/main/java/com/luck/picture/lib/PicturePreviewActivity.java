@@ -26,6 +26,7 @@ import com.luck.picture.lib.tools.ScreenUtils;
 import com.luck.picture.lib.tools.ToastManage;
 import com.luck.picture.lib.tools.VoiceUtils;
 import com.luck.picture.lib.widget.PreviewViewPager;
+import com.luck.picture.lib.widget.SelectedPreviewLayout;
 import com.yalantis.ucrop.UCrop;
 import com.yalantis.ucrop.UCropMulti;
 import com.yalantis.ucrop.model.CutInfo;
@@ -58,6 +59,7 @@ public class PicturePreviewActivity extends PictureBaseActivity implements
     private int index;
     private int screenWidth;
     private Handler mHandler;
+    private SelectedPreviewLayout spLayout;
 
     /**
      * EventBus 3.0 回调
@@ -76,6 +78,23 @@ public class PicturePreviewActivity extends PictureBaseActivity implements
                         onBackPressed();
                     }
                 }, 150);
+                break;
+            case PictureConfig.UPDATE_FLAG_PREVIEW:
+                // 预览时勾选图片更新回调
+                List<LocalMedia> localMediaList = obj.medias;
+                selectImages=localMediaList;
+                onSelectNumChange(false);
+
+                tv_title.setText(position + 1 + "/" + images.size());
+                LocalMedia media = images.get(position);
+                index = media.getPosition();
+                if (!config.previewEggs) {
+                    if (config.checkNumMode) {
+                        check.setText(media.getNum() + "");
+                        notifyCheckChanged(media);
+                    }
+                    onImageChecked(position);
+                }
                 break;
         }
     }
@@ -99,14 +118,17 @@ public class PicturePreviewActivity extends PictureBaseActivity implements
         picture_left_back.setOnClickListener(this);
         tv_ok = (TextView) findViewById(R.id.tv_ok);
         id_ll_ok.setOnClickListener(this);
+        spLayout = findViewById(R.id.spLayout);
         tv_img_num = (TextView) findViewById(R.id.tv_img_num);
         tv_title = (TextView) findViewById(R.id.picture_title);
         position = getIntent().getIntExtra(PictureConfig.EXTRA_POSITION, 0);
-        tv_ok.setText(numComplete ? getString(R.string.picture_done_front_num,
-                0, config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum)
-                : getString(R.string.picture_please_select));
+//        tv_ok.setText(numComplete ? getString(R.string.picture_done_front_num,
+//                0, config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum)
+//                : getString(R.string.picture_please_select));
+        tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+        tv_ok.setText(getString(R.string.picture_please_select));
 
-        tv_img_num.setSelected(config.checkNumMode ? true : false);
+//        tv_img_num.setSelected(config.checkNumMode ? true : false);
 
         selectImages = (List<LocalMedia>) getIntent().
                 getSerializableExtra(PictureConfig.EXTRA_SELECT_LIST);
@@ -269,6 +291,7 @@ public class PicturePreviewActivity extends PictureBaseActivity implements
                 notifyCheckChanged(media);
             }
         }
+        spLayout.bindPreviewData(selectImages,position);
     }
 
     /**
@@ -336,24 +359,29 @@ public class PicturePreviewActivity extends PictureBaseActivity implements
             tv_ok.setSelected(true);
             id_ll_ok.setEnabled(true);
             if (numComplete) {
-                tv_ok.setText(getString(R.string.picture_done_front_num, selectImages.size(),
-                        config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+//                tv_ok.setText(getString(R.string.picture_done_front_num, selectImages.size(),
+//                        config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+                tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                tv_ok.setText(getString(R.string.picture_please_select));
             } else {
                 if (refresh) {
                     tv_img_num.startAnimation(animation);
                 }
                 tv_img_num.setVisibility(View.VISIBLE);
-                tv_img_num.setText(String.valueOf(selectImages.size()));
+                tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
                 tv_ok.setText(getString(R.string.picture_completed));
             }
         } else {
             id_ll_ok.setEnabled(false);
             tv_ok.setSelected(false);
             if (numComplete) {
-                tv_ok.setText(getString(R.string.picture_done_front_num, 0,
-                        config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+//                tv_ok.setText(getString(R.string.picture_done_front_num, 0,
+//                        config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
+                tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                tv_ok.setText(getString(R.string.picture_please_select));
             } else {
-                tv_img_num.setVisibility(View.INVISIBLE);
+                tv_img_num.setVisibility(View.VISIBLE);
+                tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
                 tv_ok.setText(getString(R.string.picture_please_select));
             }
         }
@@ -367,6 +395,7 @@ public class PicturePreviewActivity extends PictureBaseActivity implements
      */
     private void updateSelector(boolean isRefresh) {
         if (isRefresh) {
+            spLayout.bindPreviewData(selectImages,selectImages.size()-1);
             EventEntity obj = new EventEntity(PictureConfig.UPDATE_FLAG, selectImages, index);
             RxBus.getDefault().post(obj);
         }
