@@ -18,9 +18,9 @@
 
 ## 效果
 
-![image](https://github.com/LuckSiege/PictureSelector/blob/master/image/1.png)
-![image](https://github.com/LuckSiege/PictureSelector/blob/master/image/2.png)
-![image](https://github.com/LuckSiege/PictureSelector/blob/master/image/3.png)
+![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/1.png)
+![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/2.png)
+![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/3.png)
 
 # 功能特点
 
