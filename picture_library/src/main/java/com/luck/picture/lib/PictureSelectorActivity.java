@@ -244,6 +244,10 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         String title = config.mimeType == PictureMimeType.ofAudio() ?
                 getString(R.string.picture_all_audio)
                 : getString(R.string.picture_camera_roll);
+        if (config.isShowTopFolder)
+        {
+            picture_title.setCompoundDrawables(null,null,null,null);
+        }
         if (pictureTitle != null && !TextUtils.isEmpty(pictureTitle)) {
             picture_title.setText(pictureTitle);
         } else {
