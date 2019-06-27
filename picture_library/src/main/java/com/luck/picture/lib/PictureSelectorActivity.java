@@ -3,6 +3,7 @@ package com.luck.picture.lib;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -12,14 +13,19 @@ import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -68,7 +74,7 @@ import io.reactivex.disposables.Disposable;
  * @描述: Media 选择页面
  */
 public class PictureSelectorActivity extends PictureBaseActivity implements View.OnClickListener,
-        PictureAlbumDirectoryAdapter.OnItemClickListener,
+        PictureAlbumDirectoryAdapter.OnItemClickListener,PictureImageGridAdapter.OnItemClickListener,
         PictureImageGridAdapter.OnPhotoSelectChangedListener, PhotoPopupWindow.OnItemClickListener {
     private final static String TAG = PictureSelectorActivity.class.getSimpleName();
     private static final int SHOW_DIALOG = 0;
@@ -255,6 +261,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         }
         adapter = new PictureImageGridAdapter(mContext, config);
         adapter.setOnPhotoSelectChangedListener(PictureSelectorActivity.this);
+        adapter.setOnItemClickListener(this);
         adapter.bindSelectImages(selectionMedias);
         folderWindow = new FolderPopWindow(this, config.mimeType);
         folderWindow.setPictureTitleView(picture_title);
@@ -680,6 +687,8 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             e.printStackTrace();
         }
     }
+
+
 
     /**
      * 播放音频点击事件
@@ -1175,4 +1184,116 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                 break;
         }
     }
+
+
+    @Override
+    public void onItemClick(View view,int position) {
+
+        final ImageView moveImageView = getView(view);
+        final int[] startLocation = new int[2];
+        GridLayoutManager gridLayoutManager= (GridLayoutManager) picture_recycler.getLayoutManager();
+        int num=position-gridLayoutManager.findFirstVisibleItemPosition();
+
+        if (picture_recycler.getChildAt(num)!=null) {
+            picture_recycler.getChildAt(num).getLocationInWindow(startLocation);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    int[] endLocation = new int[2];
+                    spLayout.getLocation(endLocation);
+                    MoveAnim(moveImageView, startLocation, endLocation);
+                }
+            },100L);
+
+        }
+
+    }
+
+
+    /**
+     *获取点击的Item的对应View，
+     *因为点击的Item已经有了自己归属的父容器MyGridView，所有我们要是有一个ImageView来代替Item移动
+     * @param view
+     * @return
+     */
+    private ImageView getView(View view) {
+        view.destroyDrawingCache();
+        view.setDrawingCacheEnabled(true);
+        Bitmap cache = Bitmap.createBitmap(view.getDrawingCache());
+        view.setDrawingCacheEnabled(false);
+        ImageView iv = new ImageView(this);
+        iv.setImageBitmap(cache);
+        return iv;
+    }
+    /**
+     * 获取移动的VIEW，放入对应ViewGroup布局容器
+     * @param viewGroup
+     * @param view
+     * @param initLocation
+     * @return
+     */
+    private View getMoveView(ViewGroup viewGroup, View view, int[] initLocation) {
+        int x = initLocation[0];
+        int y = initLocation[1];
+        viewGroup.addView(view);
+        LinearLayout.LayoutParams mLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        mLayoutParams.leftMargin = x;
+        mLayoutParams.topMargin = y;
+        view.setLayoutParams(mLayoutParams);
+        return view;
+    }
+
+    /**
+     * 创建移动的ITEM对应的ViewGroup布局容器
+     * 用于存放我们移动的View
+     */
+    private ViewGroup getMoveViewGroup() {
+        //window中最顶层的view
+        ViewGroup moveViewGroup = (ViewGroup) getWindow().getDecorView();
+        LinearLayout moveLinearLayout = new LinearLayout(this);
+        moveLinearLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        moveViewGroup.addView(moveLinearLayout);
+        return moveLinearLayout;
+    }
+    /**
+     * 点击ITEM移动动画
+     *
+     * @param moveView
+     * @param startLocation
+     * @param endLocation
+     */
+    private void MoveAnim(final View moveView, int[] startLocation, int[] endLocation) {
+        int[] initLocation = new int[2];
+        //获取传递过来的VIEW的坐标
+        moveView.getLocationInWindow(initLocation);
+        //得到要移动的VIEW,并放入对应的容器中
+        final ViewGroup moveViewGroup = getMoveViewGroup();
+        final View mMoveView = getMoveView(moveViewGroup, moveView, initLocation);
+        //创建移动动画
+        final TranslateAnimation moveAnimation = new TranslateAnimation(
+                startLocation[0], endLocation[0], startLocation[1],
+                endLocation[1]);
+        moveAnimation.setDuration(300L);//动画时间
+        //动画配置
+        AnimationSet moveAnimationSet = new AnimationSet(true);
+        moveAnimationSet.setFillAfter(false);//动画效果执行完毕后，View对象不保留在终止的位置
+        moveAnimationSet.addAnimation(moveAnimation);
+        mMoveView.startAnimation(moveAnimationSet);
+        moveAnimationSet.setAnimationListener(new Animation.AnimationListener() {
+
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                moveViewGroup.removeView(moveView);
+            }
+        });
+    }
+
 }

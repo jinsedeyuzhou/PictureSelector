@@ -1,6 +1,6 @@
 # PictureSelector 2.0
-    本项目是基于PictureSelector开发的仿京东打开相册功能，新增了在选择图片界面左键返回到相册文件夹列表，底部选中预览，更改了部分UI,新增了一些配置参数。
-    有不同需求可以参考原版，也可以在此基础改进，由于时间关系，选中平移动画没有添加，后期会补上。有问题可以在Issue反馈。
+    本项目是基于PictureSelector开发的仿京东打开相册功能，新增了在选择图片界面左键返回到相册文件夹列表，底部选中预览和平移动画，更改了部分UI,新增了一些配置参数。
+    有不同需求可以参考原版，也可以在此基础改进。有问题可以在Issue反馈。
 
 
 ## 目录
@@ -21,6 +21,10 @@
 ![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/1.png)
 ![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/2.png)
 ![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/3.png)
+
+
+
+[link](https://www.pgyer.com/yGHf)
 
 # 功能特点
 

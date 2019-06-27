@@ -225,6 +225,9 @@ public class PictureImageGridAdapter extends RecyclerView.Adapter<RecyclerView.V
                             return;
                         }
                         changeCheckboxState(contentHolder, image);
+                        if (onItemClickListener!=null&&contentHolder.check.isSelected()) {
+                            onItemClickListener.onItemClick(contentHolder.contentView,position);
+                        }
                     }
                 });
             }
@@ -468,5 +471,17 @@ public class PictureImageGridAdapter extends RecyclerView.Adapter<RecyclerView.V
             set.setDuration(DURATION);
             set.start();
         }
+    }
+
+    public  interface OnItemClickListener
+    {
+        void onItemClick(View view,int position);
+    }
+
+    private OnItemClickListener onItemClickListener;
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener)
+    {
+        this.onItemClickListener=onItemClickListener;
     }
 }
