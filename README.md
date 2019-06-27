@@ -17,6 +17,8 @@
 
 
 ## 效果
+[Demo下载地址](https://www.pgyer.com/yGHf)
+
 
 ![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/1.png)
 ![image](https://github.com/jinsedeyuzhou/PictureSelector/blob/master/image/2.png)
@@ -24,7 +26,6 @@
 
 
 
-[link](https://www.pgyer.com/yGHf)
 
 # 功能特点
 

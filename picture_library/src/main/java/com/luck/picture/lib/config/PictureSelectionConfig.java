@@ -65,6 +65,7 @@ public final class PictureSelectionConfig implements Parcelable {
     public boolean synOrAsy;
     public boolean isDragFrame;
     public boolean isShowTopFolder;
+    public boolean isEnableAnim;
 
     public List<LocalMedia> selectionMedias;
 
@@ -109,6 +110,7 @@ public final class PictureSelectionConfig implements Parcelable {
         zoomAnim = true;
         isDragFrame = true;
         isShowTopFolder=false;
+        isEnableAnim=true;
         outputCameraPath = "";
         compressSavePath = "";
         suffixType = PictureFileUtils.POSTFIX;
@@ -181,6 +183,7 @@ public final class PictureSelectionConfig implements Parcelable {
         dest.writeByte(this.synOrAsy ? (byte) 1 : (byte) 0);
         dest.writeByte(this.isDragFrame ? (byte) 1 : (byte) 0);
         dest.writeByte(this.isShowTopFolder ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.isEnableAnim ? (byte) 1 : (byte) 0);
         dest.writeTypedList(this.selectionMedias);
     }
 
@@ -232,6 +235,7 @@ public final class PictureSelectionConfig implements Parcelable {
         this.synOrAsy = in.readByte() != 0;
         this.isDragFrame = in.readByte() != 0;
         this.isShowTopFolder = in.readByte() != 0;
+        this.isEnableAnim = in.readByte() != 0;
         this.selectionMedias = in.createTypedArrayList(LocalMedia.CREATOR);
     }
 

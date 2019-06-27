@@ -288,7 +288,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                                 readLocalMedia();
                             }else
                             {
-                                adapter.setShowCamera(true);
+                                adapter.setShowCamera(config.camera);
                                 adapter.bindImagesData(images);
                                 adapter.bindSelectImages(selectedImages);
                                 tv_empty.setVisibility(images.size() > 0
@@ -320,6 +320,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         if (config.isCamera) {
             config.isCamera = StringUtils.isCamera(titleText);
         }
+
 
 
     }
@@ -1189,22 +1190,24 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     @Override
     public void onItemClick(View view,int position) {
 
-        final ImageView moveImageView = getView(view);
-        final int[] startLocation = new int[2];
-        GridLayoutManager gridLayoutManager= (GridLayoutManager) picture_recycler.getLayoutManager();
-        int num=position-gridLayoutManager.findFirstVisibleItemPosition();
+        if (config.isEnableAnim) {
+            final ImageView moveImageView = getView(view);
+            final int[] startLocation = new int[2];
+            GridLayoutManager gridLayoutManager = (GridLayoutManager) picture_recycler.getLayoutManager();
+            int num = position - gridLayoutManager.findFirstVisibleItemPosition();
 
-        if (picture_recycler.getChildAt(num)!=null) {
-            picture_recycler.getChildAt(num).getLocationInWindow(startLocation);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    int[] endLocation = new int[2];
-                    spLayout.getLocation(endLocation);
-                    MoveAnim(moveImageView, startLocation, endLocation);
-                }
-            },100L);
+            if (picture_recycler.getChildAt(num) != null) {
+                picture_recycler.getChildAt(num).getLocationInWindow(startLocation);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        int[] endLocation = new int[2];
+                        spLayout.getLocation(endLocation);
+                        MoveAnim(moveImageView, startLocation, endLocation);
+                    }
+                }, 100L);
 
+            }
         }
 
     }
