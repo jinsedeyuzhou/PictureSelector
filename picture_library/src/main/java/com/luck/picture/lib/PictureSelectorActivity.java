@@ -512,9 +512,18 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             }
         }
         if (id == R.id.picture_left_back) {
-           goPictureDirectory();
+            if (!config.isShowTopFolder) {
+                goPictureDirectory();
+            }else
+            {
+                closeActivity();
+            }
         }
         if (id == R.id.picture_title) {
+            if (!config.isShowTopFolder)
+            {
+                return;
+            }
             if (folderWindow.isShowing()) {
                 folderWindow.dismiss();
             } else {
@@ -1205,7 +1214,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                         spLayout.getLocation(endLocation);
                         MoveAnim(moveImageView, startLocation, endLocation);
                     }
-                }, 100L);
+                }, 50L);
 
             }
         }
