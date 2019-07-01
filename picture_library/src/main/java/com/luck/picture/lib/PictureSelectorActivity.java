@@ -32,6 +32,7 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.luck.picture.lib.adapter.BottomPreviewAdapter;
 import com.luck.picture.lib.adapter.PictureAlbumDirectoryAdapter;
 import com.luck.picture.lib.adapter.PictureImageGridAdapter;
 import com.luck.picture.lib.config.PictureConfig;
@@ -228,6 +229,28 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         picture_recycler = (RecyclerView) findViewById(R.id.picture_recycler);
         id_ll_ok = (LinearLayout) findViewById(R.id.id_ll_ok);
         spLayout = findViewById(R.id.spLayout);
+        spLayout.setOnItemClickListener(new BottomPreviewAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View v, int position) {
+                if (!config.isBottomPreview)
+                {
+                    return ;
+                }
+                List<LocalMedia> selectedImages = adapter.getSelectedImages();
+
+                List<LocalMedia> medias = new ArrayList<>();
+                for (LocalMedia media : selectedImages) {
+                    medias.add(media);
+                }
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(PictureConfig.EXTRA_PREVIEW_SELECT_LIST, (Serializable) medias);
+                bundle.putSerializable(PictureConfig.EXTRA_SELECT_LIST, (Serializable) selectedImages);
+                bundle.putBoolean(PictureConfig.EXTRA_BOTTOM_PREVIEW, true);
+                startActivity(PicturePreviewActivity.class, bundle,
+                        config.selectionMode == PictureConfig.SINGLE ? UCrop.REQUEST_CROP : UCropMulti.REQUEST_MULTI_CROP);
+                overridePendingTransition(R.anim.a5, 0);
+            }
+        });
         tv_empty = (TextView) findViewById(R.id.tv_empty);
         isNumComplete(numComplete);
         if (config.mimeType == PictureMimeType.ofAll()) {
@@ -288,7 +311,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                                 readLocalMedia();
                             }else
                             {
-                                adapter.setShowCamera(config.camera);
+                                adapter.setShowCamera(config.isCamera);
                                 adapter.bindImagesData(images);
                                 adapter.bindSelectImages(selectedImages);
                                 tv_empty.setVisibility(images.size() > 0
@@ -320,7 +343,6 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         if (config.isCamera) {
             config.isCamera = StringUtils.isCamera(titleText);
         }
-
 
 
     }

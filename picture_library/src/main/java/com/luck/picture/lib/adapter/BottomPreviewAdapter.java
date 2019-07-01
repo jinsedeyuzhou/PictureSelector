@@ -75,9 +75,17 @@ public class BottomPreviewAdapter extends RecyclerView.Adapter<BottomPreviewAdap
                 notifyDataSetChanged(selectImages);
                 EventEntity obj = new EventEntity(PictureConfig.UPDATE_FLAG_PREVIEW, selectImages, position);
                 RxBus.getDefault().post(obj);
-                if (onItemClickListener!=null)
-                    onItemClickListener.onDeleteClick(v,localMedia);
+                if (onDeleteClickListener!=null)
+                    onDeleteClickListener.onDeleteClick(v,localMedia);
 
+            }
+        });
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onItemClickListener!=null)
+                    onItemClickListener.onItemClick(holder.itemView,position);
             }
         });
 
@@ -125,14 +133,27 @@ public class BottomPreviewAdapter extends RecyclerView.Adapter<BottomPreviewAdap
         }
     }
 
-    private OnDeleteClickListener onItemClickListener;
+    private OnDeleteClickListener onDeleteClickListener;
 
-    public void setOnItemClickListener(OnDeleteClickListener onItemClickListener) {
-        this.onItemClickListener = onItemClickListener;
+    public void setOnOnDeleteClickListener(OnDeleteClickListener onItemClickListener) {
+        this.onDeleteClickListener = onItemClickListener;
     }
 
     public interface OnDeleteClickListener {
         void onDeleteClick(View  view, LocalMedia localMedia);
     }
+
+    private OnItemClickListener onItemClickListener;
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener)
+    {
+        this.onItemClickListener=onItemClickListener;
+    }
+
+    public interface  OnItemClickListener
+    {
+        void onItemClick(View v,int position);
+    }
+
 
 }

@@ -105,4 +105,9 @@ public class SelectedPreviewLayout extends RelativeLayout {
         }
 
     }
+
+    public void setOnItemClickListener(BottomPreviewAdapter.OnItemClickListener onItemClickListener)
+    {
+        adapter.setOnItemClickListener(onItemClickListener);
+    }
 }

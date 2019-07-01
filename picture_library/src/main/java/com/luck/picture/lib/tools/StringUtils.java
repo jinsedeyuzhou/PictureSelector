@@ -23,11 +23,12 @@ public class StringUtils {
         if (!TextUtils.isEmpty(title) && title.startsWith("相机胶卷")
                 || title.startsWith("CameraRoll")
                 || title.startsWith("所有音频")
+                || title.startsWith("所有图片")
                 || title.startsWith("All audio")) {
             return true;
         }
 
-        return false;
+        return true;
     }
 
     public static void tempTextFont(TextView tv, int mimeType) {
