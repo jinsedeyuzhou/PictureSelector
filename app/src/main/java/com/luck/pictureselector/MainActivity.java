@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private List<LocalMedia> selectList = new ArrayList<>();
     private RecyclerView recyclerView;
     private GridImageAdapter adapter;
-    private int maxSelectNum = 9;
+    private int maxSelectNum = 12;
     private TextView tv_select_num;
     private ImageView left_back, minus, plus;
     private RadioGroup rgb_crop, rgb_style, rgb_photo_mode;

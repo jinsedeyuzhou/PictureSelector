@@ -1,7 +1,9 @@
 package com.luck.picture.lib;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -114,7 +116,9 @@ public class PictureDirectoryActivity extends PictureBaseActivity implements Vie
                Bundle bundle=new Bundle();
                bundle.putString(PictureConfig.PICTURE_TITLE,folderName);
                bundle.putSerializable(PictureConfig.DIRECTORY_LIST, (Serializable) images);
-               bundle.putSerializable(PictureConfig.EXTRA_SELECT_LIST, (Serializable) selectImages);               startActivity(PictureSelectorActivity.class,bundle);
+               Intent intent=new Intent();
+               intent.putExtras(bundle);
+               setResult(Activity.RESULT_OK,intent);
                finish();
            }
        });

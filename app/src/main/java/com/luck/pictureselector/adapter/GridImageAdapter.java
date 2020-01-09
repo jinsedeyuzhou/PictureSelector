@@ -83,7 +83,7 @@ public class GridImageAdapter extends
         if (list.size() < selectMax) {
             return list.size() + 1;
         } else {
-            return list.size();
+            return list.size()+1;
         }
     }
 

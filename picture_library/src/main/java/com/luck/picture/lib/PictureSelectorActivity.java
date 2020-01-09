@@ -1,6 +1,7 @@
 package com.luck.picture.lib;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -102,6 +103,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     private boolean isPlayAudio = false;
     private CustomDialog audioDialog;
     private int audioH;
+    @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -615,8 +617,9 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         List<LocalMedia> selectedImages = adapter.getSelectedImages();
         Bundle bundle = new Bundle();
         bundle.putSerializable(PictureConfig.EXTRA_SELECT_LIST, (Serializable) selectedImages);
-        startActivity(PictureDirectoryActivity.class, bundle);
-        finish();
+        Intent intent=new Intent(mContext,PictureDirectoryActivity.class);
+        intent.putExtras(bundle);
+        startActivityForResult(intent,PictureConfig.REQUEST_DIRECTORY);
     }
 
     /**
@@ -994,6 +997,15 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             LocalMedia media;
             String imageType;
             switch (requestCode) {
+                case PictureConfig.REQUEST_DIRECTORY:
+                    String folderName = data.getStringExtra(PictureConfig.PICTURE_TITLE);
+                    ArrayList<LocalMedia> directory = (ArrayList<LocalMedia>) data.getSerializableExtra(PictureConfig.DIRECTORY_LIST);
+                    boolean camera = StringUtils.isCamera(folderName);
+                    camera = config.isCamera ? camera : false;
+                    adapter.setShowCamera(camera);
+                    picture_title.setText(folderName);
+                    adapter.bindImagesData(directory);
+                    break;
                 case UCrop.REQUEST_CROP:
                     Uri resultUri = UCrop.getOutput(data);
                     String cutPath = resultUri.getPath();
@@ -1309,7 +1321,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         final TranslateAnimation moveAnimation = new TranslateAnimation(
                 startLocation[0], endLocation[0], startLocation[1],
                 endLocation[1]);
-        moveAnimation.setDuration(300L);//动画时间
+        moveAnimation.setDuration(500L);//动画时间
         //动画配置
         AnimationSet moveAnimationSet = new AnimationSet(true);
         moveAnimationSet.setFillAfter(false);//动画效果执行完毕后，View对象不保留在终止的位置

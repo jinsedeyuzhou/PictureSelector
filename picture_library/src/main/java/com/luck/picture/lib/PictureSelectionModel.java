@@ -43,6 +43,31 @@ public class PictureSelectionModel {
     }
 
     /**
+     * @return public boolean isShowTopFolder;
+     */
+    public PictureSelectionModel isShowTopFolder(boolean isShowTopFolder) {
+        selectionConfig.isShowTopFolder = isShowTopFolder;
+        return this;
+    }
+
+    /**
+     * public boolean isEnableAnim;
+     */
+    public PictureSelectionModel isEnableAnim(boolean isEnableAnim) {
+        selectionConfig.isEnableAnim = isEnableAnim;
+        return this;
+    }
+
+    /**
+     * @return public boolean isBottomPreview;
+     */
+    public PictureSelectionModel isBottomPreview(boolean isBottomPreview) {
+        selectionConfig.isBottomPreview = isBottomPreview;
+        return this;
+    }
+
+
+    /**
      * @param themeStyleId PictureSelector Theme style
      * @return
      */

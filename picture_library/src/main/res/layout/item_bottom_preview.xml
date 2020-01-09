@@ -20,7 +20,6 @@
         android:layout_alignParentRight="true"
         android:layout_marginRight="-3dp"
         android:layout_height="13dp"
-
         android:src="@drawable/ic_preview_delete"
         />
 
