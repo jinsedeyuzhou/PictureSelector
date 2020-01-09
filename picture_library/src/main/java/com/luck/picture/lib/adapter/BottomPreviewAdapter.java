@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -125,11 +126,13 @@ public class BottomPreviewAdapter extends RecyclerView.Adapter<BottomPreviewAdap
 
         private final ImageView ivPreviewDelete;
         private final ImageView ivPreviewPhoto;
+        private final RelativeLayout rl_bottom_content;
 
         public ViewHolder(View itemView) {
             super(itemView);
             ivPreviewDelete = itemView.findViewById(R.id.ivPreviewDelete);
             ivPreviewPhoto = itemView.findViewById(R.id.ivPreviewPhoto);
+            rl_bottom_content = itemView.findViewById(R.id.rl_bottom_content);
         }
     }
 

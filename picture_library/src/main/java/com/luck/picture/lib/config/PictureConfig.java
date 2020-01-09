@@ -16,6 +16,7 @@ public final class PictureConfig {
     public final static String EXTRA_PREVIEW_SELECT_LIST = "previewSelectList";
     public final static String EXTRA_SELECT_LIST = "selectList";
     public final static String DIRECTORY_LIST="directory_list";
+    public final static String DIRECTORY_LAST_SELECT="directory_last_select";
     public final static String EXTRA_POSITION = "position";
     public final static String EXTRA_MEDIA = "media";
     public final static String DIRECTORY_PATH = "directory_path";

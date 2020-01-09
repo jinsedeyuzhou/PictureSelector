@@ -76,7 +76,7 @@ import io.reactivex.disposables.Disposable;
  * @描述: Media 选择页面
  */
 public class PictureSelectorActivity extends PictureBaseActivity implements View.OnClickListener,
-        PictureAlbumDirectoryAdapter.OnItemClickListener,PictureImageGridAdapter.OnItemClickListener,
+        PictureAlbumDirectoryAdapter.OnItemClickListener, PictureImageGridAdapter.OnItemClickListener,
         PictureImageGridAdapter.OnPhotoSelectChangedListener, PhotoPopupWindow.OnItemClickListener {
     private final static String TAG = PictureSelectorActivity.class.getSimpleName();
     private static final int SHOW_DIALOG = 0;
@@ -89,7 +89,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     private LinearLayout id_ll_ok;
     private RecyclerView picture_recycler;
     private PictureImageGridAdapter adapter;
-    private List<LocalMedia> images = new ArrayList<>();
+    private List<LocalMedia> imagesDirectory = new ArrayList<>();
     private List<LocalMedia> selectedImages = new ArrayList<>();
     private List<LocalMediaFolder> foldersList = new ArrayList<>();
     private FolderPopWindow folderWindow;
@@ -103,6 +103,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     private boolean isPlayAudio = false;
     private CustomDialog audioDialog;
     private int audioH;
+    private boolean isDirectory = false;
     @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
         @Override
@@ -129,7 +130,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void eventBus(EventEntity obj) {
         switch (obj.what) {
-            case  PictureConfig.UPDATE_FLAG_PREVIEW:
+            case PictureConfig.UPDATE_FLAG_PREVIEW:
                 // 预览时勾选图片更新回调
                 List<LocalMedia> localMediaList = obj.medias;
                 anim = localMediaList.size() > 0 ? true : false;
@@ -210,16 +211,14 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
      * init views
      */
     private void initView(Bundle savedInstanceState) {
-        images = (List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.DIRECTORY_LIST);
-        selectedImages=(List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.EXTRA_SELECT_LIST);
-        if (images==null)
-        {
-            images=new ArrayList<>();
-        }
-        if (selectedImages==null)
-        {
-            selectedImages=new ArrayList<>();
-        }
+//        imagesDirectory = (List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.DIRECTORY_LIST);
+//        selectedImages = (List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.EXTRA_SELECT_LIST);
+//        if (imagesDirectory == null) {
+//            imagesDirectory = new ArrayList<>();
+//        }
+//        if (selectedImages == null) {
+//            selectedImages = new ArrayList<>();
+//        }
         pictureTitle = getIntent().getStringExtra(PictureConfig.PICTURE_TITLE);
         rl_picture_title = (RelativeLayout) findViewById(R.id.rl_picture_title);
         picture_left_back = (ImageView) findViewById(R.id.picture_left_back);
@@ -234,9 +233,8 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         spLayout.setOnItemClickListener(new BottomPreviewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                if (!config.isBottomPreview)
-                {
-                    return ;
+                if (!config.isBottomPreview) {
+                    return;
                 }
 //                List<LocalMedia> selectedImages = adapter.getSelectedImages();
 //
@@ -252,7 +250,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
 //                        config.selectionMode == PictureConfig.SINGLE ? UCrop.REQUEST_CROP : UCropMulti.REQUEST_MULTI_CROP);
 //                overridePendingTransition(R.anim.a5, 0);
 
-                startPreview(adapter.getSelectedImages(),position);
+                startPreview(adapter.getSelectedImages(), position);
             }
         });
         tv_empty = (TextView) findViewById(R.id.tv_empty);
@@ -277,9 +275,8 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         String title = config.mimeType == PictureMimeType.ofAudio() ?
                 getString(R.string.picture_all_audio)
                 : getString(R.string.picture_camera_roll);
-        if (!config.isShowTopFolder)
-        {
-            picture_title.setCompoundDrawables(null,null,null,null);
+        if (!config.isShowTopFolder) {
+            picture_title.setCompoundDrawables(null, null, null, null);
         }
         if (pictureTitle != null && !TextUtils.isEmpty(pictureTitle)) {
             picture_title.setText(pictureTitle);
@@ -310,15 +307,14 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                     @Override
                     public void onNext(Boolean aBoolean) {
                         if (aBoolean) {
-                            if (images.size()==0) {
+                            if (imagesDirectory.size() == 0) {
                                 mHandler.sendEmptyMessage(SHOW_DIALOG);
                                 readLocalMedia();
-                            }else
-                            {
+                            } else {
                                 adapter.setShowCamera(config.isCamera);
-                                adapter.bindImagesData(images);
+                                adapter.bindImagesData(imagesDirectory);
                                 adapter.bindSelectImages(selectedImages);
-                                tv_empty.setVisibility(images.size() > 0
+                                tv_empty.setVisibility(imagesDirectory.size() > 0
                                         ? View.INVISIBLE : View.VISIBLE);
                             }
                         } else {
@@ -368,7 +364,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
 //                0, config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum)
 //                : getString(R.string.picture_please_select));
         picture_tv_ok.setText(R.string.picture_please_select);
-        picture_tv_img_num.setText("0/"+config.maxSelectNum);
+        picture_tv_img_num.setText("0/" + config.maxSelectNum);
         if (!numComplete) {
             animation = AnimationUtils.loadAnimation(this, R.anim.modal_in);
         }
@@ -382,6 +378,10 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         mediaLoader.loadAllMedia(new LocalMediaLoader.LocalMediaLoadListener() {
             @Override
             public void loadComplete(List<LocalMediaFolder> folders) {
+                if (isDirectory) {
+                    isDirectory = false;
+                    return;
+                }
                 if (folders.size() > 0) {
                     foldersList = folders;
                     LocalMediaFolder folder = folders.get(0);
@@ -390,17 +390,17 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                     // 这里解决有些机型会出现拍照完，相册列表不及时刷新问题
                     // 因为onActivityResult里手动添加拍照后的照片，
                     // 如果查询出来的图片大于或等于当前adapter集合的图片则取更新后的，否则就取本地的
-                    if (localImg.size() >= images.size()) {
-                        images = localImg;
+                    if (localImg.size() >= imagesDirectory.size()) {
+                        imagesDirectory = localImg;
                         folderWindow.bindFolder(folders);
                     }
                 }
                 if (adapter != null) {
-                    if (images == null) {
-                        images = new ArrayList<>();
+                    if (imagesDirectory == null) {
+                        imagesDirectory = new ArrayList<>();
                     }
-                    adapter.bindImagesData(images);
-                    tv_empty.setVisibility(images.size() > 0
+                    adapter.bindImagesData(imagesDirectory);
+                    tv_empty.setVisibility(imagesDirectory.size() > 0
                             ? View.INVISIBLE : View.VISIBLE);
                 }
                 mHandler.sendEmptyMessage(DISMISS_DIALOG);
@@ -534,26 +534,24 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             if (folderWindow.isShowing()) {
                 folderWindow.dismiss();
             } else {
-              closeActivity();
+                closeActivity();
             }
         }
         if (id == R.id.picture_left_back) {
             if (!config.isShowTopFolder) {
                 goPictureDirectory();
-            }else
-            {
+            } else {
                 closeActivity();
             }
         }
         if (id == R.id.picture_title) {
-            if (!config.isShowTopFolder)
-            {
+            if (!config.isShowTopFolder) {
                 return;
             }
             if (folderWindow.isShowing()) {
                 folderWindow.dismiss();
             } else {
-                if (images != null && images.size() > 0) {
+                if (imagesDirectory != null && imagesDirectory.size() > 0) {
                     folderWindow.showAsDropDown(rl_picture_title);
                     List<LocalMedia> selectedImages = adapter.getSelectedImages();
                     folderWindow.notifyDataCheckedStatus(selectedImages);
@@ -617,9 +615,12 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         List<LocalMedia> selectedImages = adapter.getSelectedImages();
         Bundle bundle = new Bundle();
         bundle.putSerializable(PictureConfig.EXTRA_SELECT_LIST, (Serializable) selectedImages);
-        Intent intent=new Intent(mContext,PictureDirectoryActivity.class);
+        bundle.putSerializable(PictureConfig.DIRECTORY_LIST, (Serializable) foldersList);
+        bundle.putSerializable(PictureConfig.DIRECTORY_LIST, (Serializable) foldersList);
+        bundle.putString(PictureConfig.DIRECTORY_LAST_SELECT, picture_title.getText().toString().trim());
+        Intent intent = new Intent(mContext, PictureDirectoryActivity.class);
         intent.putExtras(bundle);
-        startActivityForResult(intent,PictureConfig.REQUEST_DIRECTORY);
+        startActivityForResult(intent, PictureConfig.REQUEST_DIRECTORY);
     }
 
     /**
@@ -724,7 +725,6 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             e.printStackTrace();
         }
     }
-
 
 
     /**
@@ -956,7 +956,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
 //                        (R.string.picture_done_front_num, selectImages.size(),
 //                                config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
                 picture_tv_img_num.setVisibility(View.VISIBLE);
-                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                picture_tv_img_num.setText(String.valueOf(selectImages.size()) + "/" + config.maxSelectNum);
                 picture_tv_ok.setText(getString(R.string.picture_completed));
 
             } else {
@@ -964,7 +964,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                     picture_tv_img_num.startAnimation(animation);
                 }
                 picture_tv_img_num.setVisibility(View.VISIBLE);
-                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                picture_tv_img_num.setText(String.valueOf(selectImages.size()) + "/" + config.maxSelectNum);
                 picture_tv_ok.setText(getString(R.string.picture_completed));
                 anim = false;
             }
@@ -976,16 +976,16 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             if (numComplete) {
 //                picture_tv_ok.setText(getString(R.string.picture_done_front_num, 0,
 //                        config.selectionMode == PictureConfig.SINGLE ? 1 : config.maxSelectNum));
-                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                picture_tv_img_num.setText(String.valueOf(selectImages.size()) + "/" + config.maxSelectNum);
                 picture_tv_img_num.setVisibility(View.VISIBLE);
                 picture_tv_ok.setText(getString(R.string.picture_please_select));
             } else {
-                picture_tv_img_num.setText(String.valueOf(selectImages.size())+"/"+config.maxSelectNum);
+                picture_tv_img_num.setText(String.valueOf(selectImages.size()) + "/" + config.maxSelectNum);
                 picture_tv_img_num.setVisibility(View.VISIBLE);
                 picture_tv_ok.setText(getString(R.string.picture_please_select));
             }
         }
-        spLayout.bindPreviewData(selectImages,selectImages.size()-1);
+        spLayout.bindPreviewData(selectImages, selectImages.size() - 1);
 
     }
 
@@ -997,15 +997,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             LocalMedia media;
             String imageType;
             switch (requestCode) {
-                case PictureConfig.REQUEST_DIRECTORY:
-                    String folderName = data.getStringExtra(PictureConfig.PICTURE_TITLE);
-                    ArrayList<LocalMedia> directory = (ArrayList<LocalMedia>) data.getSerializableExtra(PictureConfig.DIRECTORY_LIST);
-                    boolean camera = StringUtils.isCamera(folderName);
-                    camera = config.isCamera ? camera : false;
-                    adapter.setShowCamera(camera);
-                    picture_title.setText(folderName);
-                    adapter.bindImagesData(directory);
-                    break;
+
                 case UCrop.REQUEST_CROP:
                     Uri resultUri = UCrop.getOutput(data);
                     String cutPath = resultUri.getPath();
@@ -1093,7 +1085,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                             medias.add(media);
                             compressImage(medias);
                             if (adapter != null) {
-                                images.add(0, media);
+                                imagesDirectory.add(0, media);
                                 adapter.notifyDataSetChanged();
                             }
                         } else {
@@ -1103,7 +1095,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                         }
                     } else {
                         // 多选 返回列表并选中当前拍照的
-                        images.add(0, media);
+                        imagesDirectory.add(0, media);
                         if (adapter != null) {
                             List<LocalMedia> selectedImages = adapter.getSelectedImages();
                             // 没有到最大选择量 才做默认选中刚拍好的
@@ -1129,7 +1121,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                         // 解决部分手机拍照完Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
                         // 不及时刷新问题手动添加
                         manualSaveFolder(media);
-                        tv_empty.setVisibility(images.size() > 0
+                        tv_empty.setVisibility(imagesDirectory.size() > 0
                                 ? View.INVISIBLE : View.VISIBLE);
                     }
 
@@ -1140,7 +1132,19 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
                         }
                     }
                     break;
+                case PictureConfig.REQUEST_DIRECTORY:
+                    isDirectory = true;
+                    String folderName = data.getStringExtra(PictureConfig.PICTURE_TITLE);
+                    ArrayList directory = (ArrayList<LocalMedia>) data.getSerializableExtra(PictureConfig.DIRECTORY_LIST);
+                    selectedImages = (ArrayList<LocalMedia>) data.getSerializableExtra(PictureConfig.EXTRA_SELECT_LIST);
+                    boolean camera = StringUtils.isCamera(folderName);
+                    camera = config.isCamera ? camera : false;
+                    adapter.setShowCamera(camera);
+                    picture_title.setText(folderName);
+                    adapter.bindImagesData(directory);
+                    break;
             }
+
         } else if (resultCode == RESULT_CANCELED) {
             if (config.camera) {
                 closeActivity();
@@ -1178,7 +1182,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
             if (cameraFolder != null && folder != null) {
                 // 相机胶卷
                 cameraFolder.setFirstImagePath(media.getPath());
-                cameraFolder.setImages(images);
+                cameraFolder.setImages(imagesDirectory);
                 cameraFolder.setImageNum(cameraFolder.getImageNum() + 1);
                 // 拍照相册
                 int num = folder.getImageNum() + 1;
@@ -1233,7 +1237,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
 
 
     @Override
-    public void onItemClick(View view,int position) {
+    public void onItemClick(View view, int position) {
 
         if (config.isEnableAnim) {
             final ImageView moveImageView = getView(view);
@@ -1259,8 +1263,9 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
 
 
     /**
-     *获取点击的Item的对应View，
-     *因为点击的Item已经有了自己归属的父容器MyGridView，所有我们要是有一个ImageView来代替Item移动
+     * 获取点击的Item的对应View，
+     * 因为点击的Item已经有了自己归属的父容器MyGridView，所有我们要是有一个ImageView来代替Item移动
+     *
      * @param view
      * @return
      */
@@ -1273,8 +1278,10 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         iv.setImageBitmap(cache);
         return iv;
     }
+
     /**
      * 获取移动的VIEW，放入对应ViewGroup布局容器
+     *
      * @param viewGroup
      * @param view
      * @param initLocation
@@ -1303,6 +1310,7 @@ public class PictureSelectorActivity extends PictureBaseActivity implements View
         moveViewGroup.addView(moveLinearLayout);
         return moveLinearLayout;
     }
+
     /**
      * 点击ITEM移动动画
      *

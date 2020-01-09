@@ -52,6 +52,7 @@ public class PictureDirectoryActivity extends PictureBaseActivity implements Vie
     private List<LocalMediaFolder> foldersList = new ArrayList<>();
     private RxPermissions rxPermissions;
     private List<LocalMedia> selectImages;
+    private String title;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,69 +62,72 @@ public class PictureDirectoryActivity extends PictureBaseActivity implements Vie
         initView(savedInstanceState);
     }
 
-   private void initView(Bundle savedInstanceState)
-   {
-       selectImages = (List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.EXTRA_SELECT_LIST);
-       rl_picture_title = (RelativeLayout) findViewById(R.id.rl_picture_title);
-       picture_left_back = (ImageView) findViewById(R.id.picture_left_back);
-       picture_title = (TextView) findViewById(R.id.picture_title);
-       picture_right = (TextView) findViewById(R.id.picture_right);
-       id_ll_root = (LinearLayout) findViewById(R.id.id_ll_root);
-       adapter = new PictureAlbumDirectoryAdapter(this);
-       recyclerView = (RecyclerView) findViewById(R.id.folder_list);
+    private void initView(Bundle savedInstanceState) {
+        title = getIntent().getStringExtra(PictureConfig.DIRECTORY_LAST_SELECT);
+        selectImages = (List<LocalMedia>) getIntent().getSerializableExtra(PictureConfig.EXTRA_SELECT_LIST);
+        foldersList = (List<LocalMediaFolder>) getIntent().getSerializableExtra(PictureConfig.DIRECTORY_LIST);
+        rl_picture_title = (RelativeLayout) findViewById(R.id.rl_picture_title);
+        picture_left_back = (ImageView) findViewById(R.id.picture_left_back);
+        picture_title = (TextView) findViewById(R.id.picture_title);
+        picture_right = (TextView) findViewById(R.id.picture_right);
+        id_ll_root = (LinearLayout) findViewById(R.id.id_ll_root);
+        adapter = new PictureAlbumDirectoryAdapter(this);
+        recyclerView = (RecyclerView) findViewById(R.id.folder_list);
 //       recyclerView.getLayoutParams().height = (int) (ScreenUtils.getScreenHeight(this) * 0.6);
-       recyclerView.addItemDecoration(new RecycleViewDivider(
-               this, LinearLayoutManager.HORIZONTAL, ScreenUtils.dip2px(this, 1), ContextCompat.getColor(this, R.color.color_E8E8E8)));
-       recyclerView.setLayoutManager(new LinearLayoutManager(this));
-       recyclerView.setAdapter(adapter);
-       picture_title.setText("相册");
+        recyclerView.addItemDecoration(new RecycleViewDivider(
+                this, LinearLayoutManager.HORIZONTAL, ScreenUtils.dip2px(this, 1), ContextCompat.getColor(this, R.color.color_E8E8E8)));
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+        picture_title.setText("相册");
 
-       picture_title.setCompoundDrawables(null,null,null,null);
-       picture_left_back.setOnClickListener(this);
-       picture_right.setOnClickListener(this);
+        picture_title.setCompoundDrawables(null, null, null, null);
+        picture_left_back.setOnClickListener(this);
+        picture_right.setOnClickListener(this);
 
-       mediaLoader = new LocalMediaLoader(this, config.mimeType, config.isGif, config.videoMaxSecond, config.videoMinSecond);
+        mediaLoader = new LocalMediaLoader(this, config.mimeType, config.isGif, config.videoMaxSecond, config.videoMinSecond);
 
-       rxPermissions.request(Manifest.permission.READ_EXTERNAL_STORAGE)
-               .subscribe(new Observer<Boolean>() {
-                   @Override
-                   public void onSubscribe(Disposable d) {
-                   }
+        rxPermissions.request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                .subscribe(new Observer<Boolean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                    }
 
-                   @Override
-                   public void onNext(Boolean aBoolean) {
-                       if (aBoolean) {
-                           readLocalMedia();
-                       } else {
-                           ToastManage.s(mContext, getString(R.string.picture_jurisdiction));
-                       }
-                   }
+                    @Override
+                    public void onNext(Boolean aBoolean) {
+                        if (aBoolean) {
+//                           readLocalMedia();
+                        } else {
+                            ToastManage.s(mContext, getString(R.string.picture_jurisdiction));
+                        }
+                    }
 
-                   @Override
-                   public void onError(Throwable e) {
-                   }
+                    @Override
+                    public void onError(Throwable e) {
+                    }
 
-                   @Override
-                   public void onComplete() {
-                   }
-               });
+                    @Override
+                    public void onComplete() {
+                    }
+                });
 
-       adapter.setOnItemClickListener(new PictureAlbumDirectoryAdapter.OnItemClickListener() {
-           @Override
-           public void onItemClick(String folderName, List<LocalMedia> images) {
-               boolean camera = StringUtils.isCamera(folderName);
-               camera = config.isCamera ? camera : false;
-               Bundle bundle=new Bundle();
-               bundle.putString(PictureConfig.PICTURE_TITLE,folderName);
-               bundle.putSerializable(PictureConfig.DIRECTORY_LIST, (Serializable) images);
-               Intent intent=new Intent();
-               intent.putExtras(bundle);
-               setResult(Activity.RESULT_OK,intent);
-               finish();
-           }
-       });
+        adapter.setOnItemClickListener(new PictureAlbumDirectoryAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(String folderName, List<LocalMedia> images) {
+                boolean camera = StringUtils.isCamera(folderName);
+                camera = config.isCamera ? camera : false;
+                Bundle bundle = new Bundle();
+                bundle.putString(PictureConfig.PICTURE_TITLE, folderName);
+                bundle.putSerializable(PictureConfig.DIRECTORY_LIST, (Serializable) images);
+                bundle.putSerializable(PictureConfig.EXTRA_SELECT_LIST, (Serializable) selectImages);
+                Intent intent = new Intent();
+                intent.putExtras(bundle);
+                setResult(Activity.RESULT_OK, intent);
+                finish();
+            }
+        });
 
-   }
+        notifyDataCheckedStatus(selectImages);
+    }
 
     /**
      * get LocalMedia s
@@ -154,9 +158,8 @@ public class PictureDirectoryActivity extends PictureBaseActivity implements Vie
 
     @Override
     public void onClick(View v) {
-        int id=v.getId();
-        if (id== R.id.picture_left_back||id== R.id.picture_right)
-        {
+        int id = v.getId();
+        if (id == R.id.picture_left_back || id == R.id.picture_right) {
             closeActivity();
         }
     }
@@ -178,6 +181,12 @@ public class PictureDirectoryActivity extends PictureBaseActivity implements Vie
         try {
             // 获取选中图片
             for (LocalMediaFolder folder : foldersList) {
+                if (folder.getName().equals(title)) {
+                    folder.setChecked(true);
+                }else
+                {
+                    folder.setChecked(false);
+                }
                 folder.setCheckedNum(0);
             }
             if (medias.size() > 0) {
@@ -200,7 +209,6 @@ public class PictureDirectoryActivity extends PictureBaseActivity implements Vie
             e.printStackTrace();
         }
     }
-
 
 
 }
